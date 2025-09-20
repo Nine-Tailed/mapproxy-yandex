@@ -1,47 +1,40 @@
-# mapproxy.yaml
 services:
   tms:
-    # Включает TMS-сервис (Tile Map Service)
     use_grid_names: true
-    origin: 'nw'  # Северо-западное начало координат (как у Яндекса)
-  
+    origin: 'nw'
   demo:
-    # Веб-интерфейс для проверки (http://ваш-url/demo)
     md:
       title: Yandex Proxy
-      abstract: Прокси для тайлов Яндекса в EPSG:4326
+      abstract: Прокси для тайлов Яндекса в WGS84
 
 layers:
   - name: yandex
-    title: Yandex Maps (EPSG:4326)
+    title: Yandex Maps (WGS84)
     sources: [yandex_cache]
 
 caches:
   yandex_cache:
     sources: [yandex_source]
     grids: [wgs84_grid]
-    # Кэширует тайлы в папку /cache (в Docker-контейнере)
     cache:
       type: file
+      directory: /var/cache/mapproxy
       directory_layout: tms
 
 sources:
   yandex_source:
     type: tile
-    # URL Яндекса с параметрами
-    url: https://core-renderer-tiles.maps.yandex.net/tiles?l=map&x=%(x)s&y=%(y)s&z=%(z)s&scale=1&lang=ru_RU
-    # Добавляем заголовки, чтобы обойти блокировку
+    url: https://core-renderer-tiles.maps.yandex.net/tiles?l=map&x=%(x)s&y=%(y)s&z=%(z)s
     http:
       headers:
         User-Agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
-        Referer: "https://yandex.ru/"
-    grid: web_mercator  # Исходная проекция Яндекса (EPSG:3857)
+        Referer: "https://yandex.ru/maps/"
+    grid: web_mercator
 
 grids:
   web_mercator:
-    base: GLOBAL_MERCATOR  # EPSG:3857
+    base: GLOBAL_MERCATOR
   wgs84_grid:
-    srs: 'EPSG:4326'  # Целевая проекция
-    bbox: [-180, -90, 180, 90]  # Границы мира
-    num_levels: 20  # Максимальный zoom
-    res: [0.703125, 0.3515625, ...]  # Автоматически рассчитает MapProxy
+    srs: 'EPSG:4326'
+    bbox: [-180, -90, 180, 90]
+    num_levels: 20
