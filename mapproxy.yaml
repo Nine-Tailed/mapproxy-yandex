@@ -38,3 +38,13 @@ grids:
     srs: 'EPSG:4326'
     bbox: [-180, -90, 180, 90]
     num_levels: 20
+
+globals:
+  cache:
+    # Ограничиваем использование памяти
+    max_tile_limit:
+      error: 5000
+      skip: 2500
+  http:
+    # Увеличиваем таймауты для медленных соединений
+    client_timeout: 30
