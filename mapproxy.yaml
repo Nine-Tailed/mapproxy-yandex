@@ -1,67 +1,56 @@
-# mapproxy.yaml
 globals:
-  # Правильная настройка PROJ (без вложенного 'proj')
   use_proj: true
   proj_data_dir: /usr/share/proj
-  
-  # Правильный формат max_tile_limit
   cache:
-    # Указываем просто число, а не словарь
-    max_tile_bytes: 100000000  # 100 MB (лучше использовать байты, чем количество тайлов)
-  
-  # Настройка логирования (в правильном формате)
+    max_tile_bytes: 100000000
   log:
-    # Уровень логирования
     level: warning
-    # Файл логов (опционально)
-    # file: /var/log/mapproxy.log
 
 services:
-  # Правильный синтаксис для demo сервиса
   demo:
-    # Название отдельно
     title: Yandex Proxy
-    # Описание отдельно
     abstract: Прокси для тайлов Яндекса в WGS84
   tms:
-    # use_grid_names: true не поддерживается в 1.16.0
-    origin: nw  # без кавычек и без use_grid_names
+    origin: nw
 
 layers:
   - name: yandex
     title: Yandex Maps (WGS84)
-    sources: [yandex_cache]
+    sources: [yandex_cache]  # ← Обратите внимание: источник - КЭШ, а не напрямую yandex_source
 
 caches:
   yandex_cache:
-    sources: [yandex_source]
-    grids: [wgs84_grid]
-    # Правильный формат кэша
+    sources: [yandex_source]  # ← Источник для кэша
+    # КРИТИЧЕСКИ ВАЖНО: указываем преобразование проекции
+    grids: [wgs84_grid]  # ← Целевая проекция (WGS84)
     cache:
       type: file
       base_dir: /var/cache/mapproxy
-      # directory_layout не поддерживается в этом формате
       use_shm: false
 
 sources:
   yandex_source:
     type: tile
-    url: https://core-renderer-tiles.maps.yandex.net/tiles?l=map&x=%(x)s&y=%(y)s&z=%(z)s
+    url: https://sat01.maps.yandex.net/tiles?l=sat&x={x}&y={y}&z={z}
     http:
+      client_timeout: 20
       headers:
         User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
         Referer: "https://yandex.ru/maps/"
-    grid: web_mercator
+        Accept-Language: "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+    # КРИТИЧЕСКИ ВАЖНО: указываем исходную проекцию Яндекса
+    grid: web_mercator  # ← Это ссылка на определение ниже
 
 grids:
+  # Определение исходной проекции (Web Mercator)
   web_mercator:
-    # base: GLOBAL_MERCATOR не поддерживается в 1.16.0
     srs: EPSG:3857
     res: [156543.03392804097, 78271.51696402048, 39135.75848201024, 19567.87924100512, 9783.93962050256, 4891.96981025128, 2445.98490512564, 1222.99245256282, 611.49622628141, 305.748113140705, 152.8740565703525, 76.43702828517625, 38.21851414258813, 19.10925707129406, 9.554628535647031, 4.777314267823516, 2.388657133911758, 1.194328566955879, 0.5971642834779395, 0.29858214173896974]
     bbox: [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244]
     bbox_srs: EPSG:3857
     origin: nw
   
+  # Определение целевой проекции (WGS84)
   wgs84_grid:
     srs: EPSG:4326
     res: [0.703125, 0.3515625, 0.17578125, 0.087890625, 0.0439453125, 0.02197265625, 0.010986328125, 0.0054931640625, 0.00274658203125, 0.001373291015625, 0.0006866455078125, 0.00034332275390625, 0.000171661376953125, 8.58306884765625e-05, 4.291534423828125e-05, 2.1457672119140625e-05, 1.0728836059570312e-05, 5.364418029785156e-06, 2.682209014892578e-06, 1.341104507446289e-06, 6.705522537231445e-07]
