@@ -1,27 +1,28 @@
-# Используем образ с предустановленными геозависимостями
+# Используем базовый образ Python
 FROM python:3.11-slim-bookworm
 
-# Шаг 1: Устанавливаем ТОЛЬКО необходимые системные зависимости
+# Установка системных зависимостей и Python-пакетов в ОДНОМ слое
+# КРИТИЧЕСКИ ВАЖНО: не разделяем установку build-essential и GDAL
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    build-essential \
     libgeos-dev \
     libproj-dev \
-    libgdal-dev=3.6.4+dfsg-1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Шаг 2: Устанавливаем Python-пакеты СРАЗУ ПОСЛЕ установки системных зависимостей
-# КРИТИЧЕСКИ ВАЖНО: не удаляем build-essential до установки GDAL!
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential && \
+    libgdal-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    && \
     \
-    # Указываем пути к заголовочным файлам GDAL
+    # Указываем пути к заголовкам GDAL
     export CPLUS_INCLUDE_PATH=/usr/include/gdal && \
     export C_INCLUDE_PATH=/usr/include/gdal && \
     \
-    # Устанавливаем пакеты в правильном порядке
+    # Устанавливаем Python-пакеты СРАЗУ после установки системных зависимостей
     pip install --no-cache-dir \
         pyproj==3.6.1 \
-        "GDAL==3.6.4" \
+        GDAL==3.6.4 \
         mapproxy==1.16.0 && \
     \
     # Удаляем компилятор ПОСЛЕ установки GDAL
@@ -29,7 +30,7 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
-# Шаг 3: Настройка окружения
+# Настройка окружения
 RUN mkdir -p /etc/mapproxy /var/cache/mapproxy
 RUN chmod -R 777 /var/cache/mapproxy
 

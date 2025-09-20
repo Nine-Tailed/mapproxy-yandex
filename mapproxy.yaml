@@ -1,7 +1,26 @@
+# mapproxy.yaml
+globals:
+  # КРИТИЧЕСКИ ВАЖНО для работы с PROJ
+  proj:
+    use_pyproj: true
+    data_dir: /usr/share/proj
+  
+  # Ограничения для Render.com (512MB RAM)
+  cache:
+    max_tile_limit:
+      error: 800    # Максимум 800 тайлов в памяти (Render.com имеет 512MB RAM)
+      skip: 400     # Пропускать при превышении 400
+  http:
+    client_timeout: 30
+  image:
+    jpeg_quality: 75  # Уменьшаем качество для экономии памяти
+  log:
+    level: warning    # Уменьшаем уровень логирования
+
 services:
   tms:
     use_grid_names: true
-    origin: 'nw'
+    origin: 'nw'      # Северо-западное начало координат (как у Яндекса)
   demo:
     md:
       title: Yandex Proxy
@@ -24,27 +43,19 @@ caches:
 sources:
   yandex_source:
     type: tile
+    # URL Яндекса с параметрами
     url: https://core-renderer-tiles.maps.yandex.net/tiles?l=map&x=%(x)s&y=%(y)s&z=%(z)s
+    # Добавляем заголовки, чтобы обойти блокировку
     http:
       headers:
-        User-Agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+        User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
         Referer: "https://yandex.ru/maps/"
-    grid: web_mercator
+    grid: web_mercator  # Исходная проекция Яндекса (EPSG:3857)
 
 grids:
   web_mercator:
-    base: GLOBAL_MERCATOR
+    base: GLOBAL_MERCATOR  # EPSG:3857
   wgs84_grid:
-    srs: 'EPSG:4326'
-    bbox: [-180, -90, 180, 90]
-    num_levels: 20
-
-globals:
-  cache:
-    # Ограничиваем использование памяти
-    max_tile_limit:
-      error: 5000
-      skip: 2500
-  http:
-    # Увеличиваем таймауты для медленных соединений
-    client_timeout: 30
+    srs: 'EPSG:4326'  # Целевая проекция
+    bbox: [-180, -90, 180, 90]  # Границы мира
+    num_levels: 15  # Уменьшено с 20 до 15 (экономия памяти для Render.com)

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: yandex-mapproxy
+    runtime: docker
+    region: frankfurt
+    envVars:
+      - key: PROJ_NETWORK
+        value: OFF
+      - key: GDAL_DISABLE_READDIR_ON_OPEN
+        value: EMPTY_DIR
+      - key: CPL_TMPDIR
+        value: /tmp
+      - key: MAPPROXY_CACHE_DIR
+        value: /var/cache/mapproxy
+    docker:
+      context: ./
+      dockerfile: Dockerfile
+    healthCheckPath: /health
+    plan: free
