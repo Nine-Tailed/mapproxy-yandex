@@ -40,4 +40,4 @@ COPY mapproxy.yaml /etc/mapproxy/
 EXPOSE 8080
 
 # Запуск с оптимизациями для Render.com
-CMD ["mapproxy-util", "serve-develop", "-b", "0.0.0.0:8080", "--threaded", "/etc/mapproxy/mapproxy.yaml"]
+CMD ["mapproxy-util", "serve-develop", "-b", "0.0.0.0:8080", "-t", "/etc/mapproxy/mapproxy.yaml"]
