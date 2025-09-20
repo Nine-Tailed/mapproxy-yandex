@@ -1,18 +1,28 @@
-# Используем образ с предустановленными геопространственными библиотеками
-FROM python:3.11-slim-bookworm
-
-# Установка системных зависимостей
+# Шаг 1: Обновляем систему и устанавливаем минимальные зависимости
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Шаг 2: Устанавливаем PROJ напрямую из Debian Bookworm
+RUN wget http://deb.debian.org/debian/pool/main/p/proj/libproj-dev_9.3.0-1_amd64.deb && \
+    wget http://deb.debian.org/debian/pool/main/p/proj/libproj25_9.3.0-1_amd64.deb && \
+    dpkg -i libproj25_9.3.0-1_amd64.deb libproj-dev_9.3.0-1_amd64.deb && \
+    rm libproj*.deb
+
+# Шаг 3: Устанавливаем остальные зависимости
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     build-essential \
     libgeos-dev \
-    libproj-dev=9.3.0-1 \
-    libgdal-dev=3.6.4+dfsg-1 \
+    libgdal-dev \
     libxml2-dev \
     libxslt1-dev \
     libjpeg-dev \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Установка ПИТОНОВСКИХ зависимостей в правильном порядке
 # 1. Сначала устанавливаем pyproj с привязкой к системному PROJ
