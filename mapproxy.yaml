@@ -1,74 +1,81 @@
 # mapproxy.yaml
-globals:
-  # ПРАВИЛЬНЫЕ НАСТРОЙКИ ДЛЯ 1.16.0 (без вложенных структур)
-  use_proj: true
-  proj_data_dir: /usr/share/proj
-  cache:
-    # max_tile_bytes НЕ поддерживается в 1.16.0
-    # Вместо этого используем max_tiles
-    max_tiles: 10000
-  # log НЕ поддерживается в этом формате
-  # Вместо этого используем параметр ниже
+# ВСЕ ПАРАМЕТРЫ ДОЛЖНЫ БЫТЬ НА ПРАВИЛЬНЫХ УРОВНЯХ (согласно документации 1.16.0)
 
-# ПРАВИЛЬНАЯ НАСТРОЙКА ЛОГИРОВАНИЯ ДЛЯ 1.16.0
+# Глобальные настройки
+globals:
+  # ПРАВИЛЬНЫЙ ФОРМАТ ДЛЯ PROJ В 1.16.0 (вложенная структура)
+  proj:
+    use_pyproj: true
+    data_dir: /usr/share/proj
+  
+  # ПРАВИЛЬНЫЙ ФОРМАТ ДЛЯ КЭША В 1.16.0
+  cache:
+    # max_tile_limit вместо max_tiles
+    max_tile_limit:
+      error: 800
+      skip: 400
+  
+  # Настройки HTTP
+  http:
+    client_timeout: 20
+
+# Настройка логирования (на том же уровне, что и globals)
 logging:
   # Уровень логирования
   level: warning
   # Формат логов
   format: "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
+# Сервисы
 services:
-  # ПРАВИЛЬНЫЙ СИНТАКСИС ДЛЯ demo в 1.16.0
+  # ПРАВИЛЬНЫЙ ФОРМАТ ДЛЯ demo В 1.16.0
   demo:
-    # Название и описание указываются ВНУТРИ demo
-    md:
-      title: Yandex Proxy
-      abstract: Прокси для тайлов Яндекса в WGS84
+    # Название и описание НАПРЯМУЮ (без md)
+    title: Yandex Proxy
+    abstract: Прокси для тайлов Яндекса в WGS84
+  
   tms:
+    # use_grid_names вместо origin
     use_grid_names: true
     origin: nw
 
+# Слои
 layers:
   - name: yandex
     title: Yandex Maps (WGS84)
     sources: [yandex_cache]
 
+# Кэши
 caches:
   yandex_cache:
     sources: [yandex_source]
     grids: [wgs84_grid]
-    # ПРАВИЛЬНЫЙ ФОРМАТ КЭША ДЛЯ 1.16.0
     cache:
       type: file
-      # base_dir НЕ поддерживается в 1.16.0
+      # directory вместо base_dir
       directory: /var/cache/mapproxy
-      # use_shm НЕ поддерживается в этом формате
-      lock_directory: /var/cache/mapproxy/locks
+      # lock_dir вместо lock_directory
+      lock_dir: /var/cache/mapproxy/locks
 
+# Источники
 sources:
   yandex_source:
     type: tile
-    url: https://sat01.maps.yandex.net/tiles?l=sat&x={x}&y={y}&z={z}
+    url: https://core-renderer-tiles.maps.yandex.net/tiles?l=map&x=%(x)s&y=%(y)s&z=%(z)s&scale=1&lang=ru_RU
     http:
       headers:
         User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
         Referer: "https://yandex.ru/maps/"
         Accept-Language: "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+    # grid должен быть веб-меркатором
     grid: web_mercator
 
+# Сетки
 grids:
   web_mercator:
-    srs: EPSG:3857
-    res: [156543.03392804097, 78271.51696402048, 39135.75848201024, 19567.87924100512, 9783.93962050256, 4891.96981025128, 2445.98490512564, 1222.99245256282, 611.49622628141, 305.748113140705, 152.8740565703525, 76.43702828517625, 38.21851414258813, 19.10925707129406, 9.554628535647031, 4.777314267823516, 2.388657133911758, 1.194328566955879, 0.5971642834779395, 0.29858214173896974]
-    bbox: [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244]
-    bbox_srs: EPSG:3857
-    origin: nw
-  
-  wgs84_grid:
-    srs: EPSG:4326
-    res: [0.703125, 0.3515625, 0.17578125, 0.087890625, 0.0439453125, 0.02197265625, 0.010986328125, 0.0054931640625, 0.00274658203125, 0.001373291015625, 0.0006866455078125, 0.00034332275390625, 0.000171661376953125, 8.58306884765625e-05, 4.291534423828125e-05, 2.1457672119140625e-05, 1.0728836059570312e-05, 5.364418029785156e-06, 2.682209014892578e-06, 1.341104507446289e-06, 6.705522537231445e-07]
-    bbox: [-180, -90, 180, 90]
-    bbox_srs: EPSG:4326
-    origin: nw
-    num_levels: 15
+    base: GLOBAL_MERCATOR
     
+  wgs84_grid:
+    srs: 'EPSG:4326'
+    bbox: [-180, -90, 180, 90]
+    num_levels: 15
