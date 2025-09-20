@@ -1,5 +1,5 @@
 # Dockerfile
-FROM python:3.9-slim-bookworm  # Debian 12 (актуальный)
+FROM python:3.9-slim-bookworm
 
 # Обновляем источники пакетов для работы с архивными репозиториями
 RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
